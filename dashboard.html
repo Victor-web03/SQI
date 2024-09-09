@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        #image {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+
+</body>
+
+</html>
+<script>
+
+
+    let currentUser = JSON.parse(localStorage.getItem('loggedInUser'))
+    console.log(currentUser);
+
+    if (!currentUser) {
+        alert('unauthorised')
+        document.body.innerHTML = 'loading...'
+        window.location.href = 'Login.html'
+
+    } else {
+        document.body.innerHTML = `<div>
+        <span>welcome ${currentUser.username}</span>
+        <button onclick="logOut()"> Log Out </button>
+        </div>
+
+   <div> 
+    <p>  <b>Time:</b> <span id='time' > </span> </p>
+   
+        <div> 
+        <label for="title"> blog title </label>
+        <input id="title" type="text" />
+        </div>
+
+        <div> 
+        <label for="description"> blog description </label>
+        <input id="description" type="text" />     
+        </div>
+
+       <div>
+    <label for="image"> Blog Image </label>
+    <img id="image" width="100px" height="100px" />
+    <input id="input" accept=".jpg,.png,.mp4" type="file" onchange="pickFile(event)" /> 
+    
+    </div>
+
+
+    <button onclick="postBlog()"> Post </button>
+     
+    </div>
+
+    <div id='preview'> </div>
+
+
+    `
+    }
+
+    // let input = document.getElementById('input')
+    function pickFile(e) {
+        let file = e.target.files[0]
+        let reader = new FileReader()
+
+        if (file) {
+            reader.readAsDataURL(file)
+        }
+
+        reader.addEventListener('load', (ev) => {
+            image.src = ev.target.result
+            image.style.display = "block"
+        })
+    }
+
+    let postArr = JSON.parse(localStorage.getItem("blogData")) || []
+
+    function postBlog() {
+        if (title.value === '' || description.value === '' || !image.src) {
+            alert('all fields are mandatory')
+        } else if (postArr.find((blogobj) => { return blogobj.title === title.value })) {
+            alert("Blog already exists")
+        }
+        else {
+            let blogObj = {
+                title: title.value,
+                description: description.value,
+                image: image.src,
+                liked: false,
+                author: currentUser.username
+            }
+            postArr.push(blogObj)
+            localStorage.setItem('blogData', JSON.stringify(postArr))
+
+            console.log(postArr);
+
+            display()
+        }
+    }
+
+    function display() {
+        preview.innerHTML = ''
+
+        postArr.forEach((element, index) => {
+            preview.innerHTML += `<p> 
+                <h1>${element.author} </h1>
+                <h1>${element.title} </h1>
+                <h1>${element.description} </h1>
+                <img src = '${element.image}' width = '50px' height = '50px'>
+                <button onclick="deletePost(${index})">delete </button>
+                <button id='likePost' onclick="like(${index})"> ${element.liked ? 'liked' : 'not liked'} </button>
+                <button id ="editPost  onClick(${index})" >edit</button>
+                </p>`
+        });
+    }
+    display()
+    function deletePost(index) {
+        postArr.splice(index, 1)
+        localStorage.setItem('blogData', JSON.stringify(postArr))
+        display()
+    }
+    function editPost(index) {
+      let edit = document.getElementById(`edit`)  
+      edit.addEventListener('click', () => preview.innerHTML)
+    //   localStorage.setItem('blogData', JSON.stringify(postArr))
+    //   display()
+   
+    }
+
+
+    function logOut() {
+        localStorage.removeItem('loggedInUser')
+        window.location.href = 'Login.html'
+    }
+
+    let myDate = new Date()
+    console.log(myDate.toUTCString());
+
+
+
+    function dateFormatter(date) {
+        let hours = date.getHours()
+        let minutes = date.getMinutes()
+        let seconds = date.getSeconds()
+
+        function addVal(val) {
+            if (val < 10) {
+                val = `0${val}`
+                return val
+            }
+            return val
+        }
+
+
+
+        hours = addVal(hours)
+        minutes = addVal(minutes)
+        seconds = addVal(seconds)
+        let time = Number(hours) > 11 ? 'pm' : 'am'
+
+        if (Number(hours) > 12) {
+            if (Number(hours) > 21) {
+                hours = hours - 12
+            } else {
+                hours = `0${hours - 12}`
+            }
+        } else {
+            hours = hours
+        }
+
+
+        return `${hours}:${minutes}:${seconds} ${time}`
+    }
+
+
+    setInterval(() => {
+        let todaysDate = new Date()
+        time.innerHTML = dateFormatter(todaysDate)
+    }, 1000);
+
+
+    // function like(params) {
+    //     if (likePost.innerText == 'not liked') {
+    //         likePost.innerText = 'liked'
+    //     }else{
+    //         likePost.innerText = 'not liked'
+    //     }
+
+    //     }
+    function like(index) {
+
+        postArr[index].liked = !postArr[index].liked
+        localStorage.setItem('blogData', JSON.stringify(postArr))
+        display()
+    }
+
+</script>
